@@ -6,7 +6,8 @@ const promisify = require('js-promisify');
 const fs = require('fs');
 const csv = require('csv');
 const through = require('through');
-const firstline = require('firstline');
+const firstline = require('./firstline-mod');
+const streamifier = require('streamifier');
 require('colors');
 
 exports.load = function load (path, usrOpts) {
@@ -30,7 +31,12 @@ exports.load = function load (path, usrOpts) {
   if (opts.delimiter.length > 1) throw new Error('The delimiter can only be one character'.red);
   log && console.log(`\nReading data from ${path}\n`);
   if (opts.stream) {
-    return fs.createReadStream(path, {encoding: opts.encoding}).pipe(csv.parse(parseOpts));
+    if (typeof path === 'string') {
+      return fs.createReadStream(path, {encoding: opts.encoding}).pipe(csv.parse(parseOpts));
+    } else {
+      // Convert from stream
+      return streamifier.createReadStream(path, {encoding: opts.encoding}).pipe(csv.parse(parseOpts));
+    }
   } else {
     return promisify(fs.readFile, [path, {encoding: opts.encoding}])
       .then(data => {
