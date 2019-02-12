@@ -27,7 +27,11 @@ module.exports = (path, usrOpts) => {
           pos += chunk.length;
         } else {
           pos += index;
-          rs.close();
+          if (typeof path === 'string') {
+            rs.close();
+          } else {
+            rs.destroy();
+          }
         }
       })
       .on('close', () => resolve(acc.slice(acc.charCodeAt(0) === 0xFEFF ? 1 : 0, pos)))
