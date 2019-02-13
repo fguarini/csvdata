@@ -249,7 +249,8 @@ exports.check = function check (path, usrOpts) {
           _parseOpts: {
             relax_column_count: true,
             delimiter: opts.delimiter
-          }
+          },
+          log: log
         });
         let result = true;
         let count = 1;
