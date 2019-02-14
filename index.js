@@ -377,11 +377,10 @@ exports.check = function check (path, usrOpts) {
                 });
               }
 
-              emptyLines && emptyLines[0] !== undefined && console.log(`\nEmpty line on line ${emptyLines.join(', ')}\n`);
               if (emptyLines && emptyLines[0] !== undefined) {
                 Object.assign(resultObject, {
                   emptyLines: {
-                    message: 'Empty line on line(s)',
+                    message: 'Empty line(s)',
                     lines: emptyLines
                   }
                 });
@@ -395,7 +394,11 @@ exports.check = function check (path, usrOpts) {
                   let item = emptyValues[i];
                   emptyValuesArray.push(`${item[0]} (${cols[item[1]]})`);
                 }
-                Object.assign(emptyValuesObject, {values: emptyValues});
+                Object.assign(emptyValuesObject, {
+                  message: emptyValues,
+                  values: emptyValuesObject
+                });
+                
                 Object.assign(resultObject, {emptyValues: emptyValuesObject});
               }
 
