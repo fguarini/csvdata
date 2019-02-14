@@ -389,13 +389,12 @@ exports.check = function check (path, usrOpts) {
               if (emptyValues && emptyValues[0] !== undefined) {
                 const emptyValuesObject = {};
                 const emptyValuesArray = [];
-                Object.assign(emptyValues, {message: 'Empty value(s) on line(s)'});
                 for (let i = 0; i < emptyValues.length; i++) {
                   let item = emptyValues[i];
                   emptyValuesArray.push(`${item[0]} (${cols[item[1]]})`);
                 }
                 Object.assign(emptyValuesObject, {
-                  message: emptyValues,
+                  message: 'Empty value(s) on line(s)',
                   values: emptyValuesArray
                 });
                 
