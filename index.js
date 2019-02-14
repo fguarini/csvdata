@@ -360,7 +360,66 @@ exports.check = function check (path, usrOpts) {
               }
               log && console.error('\nFile has problems!\n'.red);
             }
-            resolve(result);
+
+
+            const resultObject = {};
+            if (result) {
+              Object.assign(resultObject, {status: 'File looks ok'});
+            } else {
+              Object.assign(resultObject, {status: 'File has problems!'});
+
+              if (missing && missing[0] !== undefined) {
+                Object.assign(resultObject, {
+                  missingValues: {
+                    message: 'Missing value on line(s)',
+                    lines: missing
+                  } 
+                });
+              }
+
+              emptyLines && emptyLines[0] !== undefined && console.log(`\nEmpty line on line ${emptyLines.join(', ')}\n`);
+              if (emptyLines && emptyLines[0] !== undefined) {
+                Object.assign(resultObject, {
+                  emptyLines: {
+                    message: 'Empty line on line(s)',
+                    lines: emptyLines
+                  }
+                });
+              }
+              
+              if (emptyValues && emptyValues[0] !== undefined) {
+                const emptyValuesObject = {};
+                const emptyValuesArray = [];
+                Object.assign(emptyValues, {message: 'Empty value(s) on line(s)'});
+                for (let i = 0; i < emptyValues.length; i++) {
+                  let item = emptyValues[i];
+                  emptyValuesArray.push(`${item[0]} (${cols[item[1]]})`);
+                }
+                Object.assign(emptyValuesObject, {values: emptyValues});
+                Object.assign(resultObject, {emptyValues: emptyValuesObject});
+              }
+
+              if (duplicates) {
+                for (let col = 0; col < hlen; col++) {
+                  if (duplicates[col]) {
+                    let map = duplicates[col][1];
+                    let mapKeys = Object.keys(map);
+                    if (mapKeys.length !== 0) {
+                      const duplicatesObject = {};
+                      const duplicatesArray = [];
+                      Object.assign(duplicatesObject, {message: `Duplicate values for "${cols[col]}`});
+                      for (let i = 0; i < mapKeys.length; i++) {
+                        let key = mapKeys[i];
+                        duplicatesArray.push(`"${key}" on line: ${map[key].join(', ')}`);
+                      }
+                      Object.assign(duplicatesObject, {values: duplicatesArray});
+                      Object.assign(resultObject, {duplicates: duplicatesObject});
+                    }
+                  }
+                }
+              }
+            }
+            resolve(resultObject);
           })
           .on('error', err => {
             log && !module.parent && console.error(err);
