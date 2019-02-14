@@ -396,7 +396,7 @@ exports.check = function check (path, usrOpts) {
                 }
                 Object.assign(emptyValuesObject, {
                   message: emptyValues,
-                  values: emptyValuesObject
+                  values: emptyValuesArray
                 });
                 
                 Object.assign(resultObject, {emptyValues: emptyValuesObject});
