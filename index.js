@@ -28,8 +28,8 @@ exports.load = function load (path, usrOpts) {
     skip_empty_lines: true
   };
   const log = opts.log;
-  if (opts.delimiter.length > 1) throw new Error('The delimiter can only be one character'.red);
-  log && console.log(`\nReading data from ${path}\n`);
+  if (opts.delimiter.length > 1) throw new Error('The delimiter can only be one character');
+  //log && console.log(`\nReading data from ${path}\n`);
   if (opts.stream) {
     if (typeof path === 'string') {
       return fs.createReadStream(path, {encoding: opts.encoding}).pipe(csv.parse(parseOpts));
@@ -41,14 +41,14 @@ exports.load = function load (path, usrOpts) {
     return promisify(fs.readFile, [path, {encoding: opts.encoding}])
       .then(data => {
         if (data) {
-          log && console.log('Parsing data...\n'.yellow);
+          //log && console.log('Parsing data...\n'.yellow);
           return promisify(csv.parse, [data, parseOpts])
             .then(data => {
-              log && console.log('Data parsed\n'.green);
+              //log && console.log('Data parsed\n'.green);
               return data;
             });
         } else {
-          log && console.log('File appears to be empty!\n'.yellow);
+          //log && console.log('File appears to be empty!\n'.yellow);
         }
       });
   }
@@ -218,14 +218,25 @@ exports.check = function check (path, usrOpts) {
     .then(line => {
       let cols = line.split(opts.delimiter);
       if (cols.length === 1 && cols[0] === '') {
-        log && console.log(`\nReading data from ${path}\n\nFile appears to be empty!\n`.yellow);
-        return false;
+        //log && console.log(`\nReading data from ${path}\n\nFile appears to be empty!\n`.yellow);
+        //return false;
+        return {
+          status: 'File has problems',
+          error: 'File appears to be empty!'
+        };
       }
       cols.forEach(col => {
         if (col === '') {
-          let err = 'The CSV header contains empty values\n'.red;
-          log && !module.parent && console.error(err);
+          //let err = 'The CSV header contains empty values\n'.red;
+          let err = 'The CSV header contains empty values';
+          //log && !module.parent && console.error(err);
           throw new Error(err);
+          /*
+          return {
+            status: 'File has problems',
+            error: 'The CSV header contains empty values'
+          };
+          */
         }
       });
       let hlen = cols.length;
@@ -234,9 +245,10 @@ exports.check = function check (path, usrOpts) {
         opts.limit.split(',').forEach(col => {
           let i = cols.indexOf(col);
           if (i === -1) {
-            let err = (`The column value "${col}" does not correpond to CSV headers\n`).red +
+            //let err = (`The column value "${col}" does not correpond to CSV headers\n`).red +
+            let err = (`The column value "${col}" does not correpond to CSV headers\n`) +
               'Please provide valid column names (string format, comma separated)\n';
-            log && !module.parent && console.error(err);
+            //log && !module.parent && console.error(err);
             throw new Error(err);
           }
           limit.push(i);
@@ -329,6 +341,7 @@ exports.check = function check (path, usrOpts) {
         rs
           .pipe(through(check))
           .on('end', () => {
+            /*
             if (result) {
               log && console.log('\nFile looks ok.\n'.green);
             } else {
@@ -360,7 +373,7 @@ exports.check = function check (path, usrOpts) {
               }
               log && console.error('\nFile has problems!\n'.red);
             }
-
+            */
 
             const resultObject = {};
             if (result) {
@@ -424,10 +437,19 @@ exports.check = function check (path, usrOpts) {
             resolve(resultObject);
           })
           .on('error', err => {
-            log && !module.parent && console.error(err);
-            reject(err);
+            //log && !module.parent && console.error(err);
+            //reject(err);
+            return {
+              status: 'File has problems!',
+              error: err
+            }
           });
       });
+    }).catch(err => {
+      return {
+        status: 'File has problems!',
+        error: err.message
+      }
     });
 };
 
