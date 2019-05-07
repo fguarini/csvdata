@@ -7,8 +7,40 @@ const fs = require('fs');
 const csv = require('csv');
 const through = require('through');
 const firstline = require('./firstline-mod');
-const streamifier = require('streamifier');
+// const streamifier = require('streamifier');
 require('colors');
+
+var stream = require( 'stream' );
+var util = require( 'util' );
+
+function BufferStream ( source ) {
+  if ( ! Buffer.isBuffer( source ) ) {
+    throw ( new Error( 'Source must be a buffer.' ) );
+  }
+  stream.Readable.call( this, {encoding: 'utf-8', highWaterMark: 64 * 1024 } );
+  this._source = source;
+  this._offset = 0;
+  this._length = source.length;
+  this.on ( 'end', this._destroy );
+}
+
+util.inherits( BufferStream, stream.Readable );
+
+BufferStream.prototype._destroy = function () {
+  this._source = null;
+  this._offset = null;
+  this._length = null;
+};
+
+BufferStream.prototype._read = function ( size ) {
+  if ( this._offset < this._length ) {
+    this.push( this._source.slice( this._offset, ( this._offset + size ) ) );
+    this._offset += size;
+  } else {
+    this.push( null );
+  }
+};
+
 
 exports.load = function load (path, usrOpts) {
   const opts = {
@@ -34,8 +66,8 @@ exports.load = function load (path, usrOpts) {
     if (typeof path === 'string') {
       return fs.createReadStream(path, {encoding: opts.encoding}).pipe(csv.parse(parseOpts));
     } else {
-      // Convert from stream
-      return streamifier.createReadStream(path, {encoding: opts.encoding}).pipe(csv.parse(parseOpts));
+      return (new BufferStream(path)).pipe(csv.parse(parseOpts));
+      //return streamifier.createReadStream(path, {encoding: opts.encoding}).pipe(csv.parse(parseOpts));
     }
   } else {
     return promisify(fs.readFile, [path, {encoding: opts.encoding}])
@@ -442,14 +474,14 @@ exports.check = function check (path, usrOpts) {
             return {
               status: 'File has problems!',
               error: err
-            }
+            };
           });
       });
     }).catch(err => {
       return {
         status: 'File has problems!',
         error: err.message
-      }
+      };
     });
 };
 
